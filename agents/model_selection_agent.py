@@ -12,7 +12,7 @@ class ModelSelectionAgent:
 
         for model_name, metrics in self.results.items():
 
-            f1 = metrics["F1"]
+            f1 = metrics["F1 Score"]
             roc_auc = metrics["ROC-AUC"]
 
             score = (f1, roc_auc)

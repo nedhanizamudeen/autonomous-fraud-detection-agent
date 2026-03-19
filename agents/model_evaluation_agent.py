@@ -1,4 +1,4 @@
-from sklearn.metrics import accuracy_score, recall_score, precision_score, roc_auc_score, f1_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score, roc_auc_score, f1_score, confusion_matrix
 
 
 class ModelEvaluationAgent:
@@ -9,11 +9,11 @@ class ModelEvaluationAgent:
         self.y_test = y_test
         self.results = {}
 
-    def evaluate_model(self, model, model_name, scaler):
+    def evaluate_model(self, model, model_name, scaler=None):
 
         print(f"\nEvaluating {model_name}...")
 
-        # Apply scaling if needed
+        # Apply scaling only if needed (for Logistic Regression)
         if scaler is not None:
             X_test = scaler.transform(self.X_test)
         else:
@@ -23,7 +23,18 @@ class ModelEvaluationAgent:
         y_pred = model.predict(X_test)
         y_pred_prob = model.predict_proba(X_test)[:, 1]
 
-        # Metrics
+        cm = confusion_matrix(self.y_test, y_pred)
+
+        print("\nConfusion Matrix:")
+        print(cm)
+
+        tn, fp, fn, tp = cm.ravel()
+
+        print(f"True Negatives (TN): {tn}")
+        print(f"False Positives (FP): {fp}")
+        print(f"False Negatives (FN): {fn}")
+        print(f"True Positives (TP): {tp}")
+
         accuracy = accuracy_score(self.y_test, y_pred)
         recall = recall_score(self.y_test, y_pred)
         precision = precision_score(self.y_test, y_pred)
@@ -36,11 +47,10 @@ class ModelEvaluationAgent:
             "Recall": recall,
             "Precision": precision,
             "ROC-AUC": roc_auc,
-            "F1": f1
+            "F1 Score": f1
         }
 
-        # Print results
-        print(f"{model_name} Results:")
+        print(f"\n{model_name} Results:")
         print(f"Accuracy: {accuracy:.4f}")
         print(f"Recall: {recall:.4f}")
         print(f"Precision: {precision:.4f}")
@@ -51,7 +61,15 @@ class ModelEvaluationAgent:
 
         print("\n--- Model Evaluation Started ---")
 
-        for model_name, (model, scaler) in self.models.items():
+        for model_name, model_data in self.models.items():
+
+            # Handle models with scaler (Logistic Regression)
+            if isinstance(model_data, tuple):
+                model, scaler = model_data
+            else:
+                model = model_data
+                scaler = None
+
             self.evaluate_model(model, model_name, scaler)
 
         print("\n--- Evaluation Completed ---")
